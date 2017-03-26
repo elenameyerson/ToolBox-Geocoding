@@ -1,4 +1,7 @@
 """
+Elena Meyerson
+SoftDes Spring 2017
+
 Geocoding and Web APIs Project Toolbox exercise
 
 Find the MBTA stops closest to a given location.
@@ -17,41 +20,45 @@ MBTA_BASE_URL = "http://realtime.mbta.com/developer/api/v2/stopsbylocation"
 MBTA_DEMO_API_KEY = "wX9NwuHnZU2ToO7GmGR9uw"
 
 
-# A little bit of scaffolding if you want to use it
+def lat_lon(data):
 
-def get_json(url):
-    """
-    Given a properly formatted URL for a JSON web API request, return
-    a Python JSON object containing the response to that request.
-    """
-    pass
-
-
-def get_lat_long(place_name):
-    """
-    Given a place name or address, return a (latitude, longitude) tuple
-    with the coordinates of the given place.
-
-    See https://developers.google.com/maps/documentation/geocoding/
-    for Google Maps Geocode API URL formatting requirements.
-    """
-    pass
+    results = data['results']
+    dict1 = results[0]
+    geo = dict1['geometry']
+    loc = geo['location']
+    longitude = loc['lng']
+    latitude = loc['lat']
+    return(latitude, longitude)
 
 
-def get_nearest_station(latitude, longitude):
-    """
-    Given latitude and longitude strings, return a (station_name, distance)
-    tuple for the nearest MBTA station to the given coordinates.
-
-    See http://realtime.mbta.com/Portal/Home/Documents for URL
-    formatting requirements for the 'stopsbylocation' API.
-    """
-    pass
+def encodeURL(place_name):
+    GMAPS_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
+    place_name = place_name.replace(" ", "+")
+    url = GMAPS_BASE_URL + "?address=" + place_name
+    return url
 
 
-def find_stop_near(place_name):
-    """
-    Given a place name or address, print the nearest MBTA stop and the
-    distance from the given place to that stop.
-    """
-    pass
+def closestStop(lat, lon):
+    MBTA_BASE_URL = "http://realtime.mbta.com/developer/api/v2/stopsbylocation"
+    MBTA_DEMO_API_KEY = "wX9NwuHnZU2ToO7GmGR9uw"
+    url = MBTA_BASE_URL + "?api_key=" + MBTA_DEMO_API_KEY + "&lat=%s&lon=%s&format=json"%(lat,lon)
+    f = urlopen(url)
+    response_text = f.read()
+    response_data = json.loads(str(response_text, "utf-8"))
+    dist = response_data['stop'][0]['distance']
+    name = response_data['stop'][0]['stop_name']
+    return name, dist
+
+
+def findMBTA(location):
+    url = encodeURL(location)
+    f = urlopen(url)
+    response_text = f.read()
+    response_data = json.loads(str(response_text, "utf-8"))
+    loc = lat_lon(response_data)
+    lat1 = loc[0]
+    lon1 = loc[1]
+    stop = closestStop(lat1,lon1)
+    return "The closest MBTA stop is %s and it is %s miles away."%(stop[0], stop[1])
+
+print(findMBTA('Fenway Park'))
